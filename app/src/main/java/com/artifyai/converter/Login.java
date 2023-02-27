@@ -8,14 +8,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Objects;
+
+import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
 
 public class Login extends AppCompatActivity {
 
-
+    Button btnLogin;
+    EditText txtPassword;
+    EditText txtEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,74 +37,59 @@ public class Login extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        Button btnLogin = (Button) findViewById(R.id.btnLogin);
-        EditText password = (EditText) findViewById(R.id.txtPassword);
-        EditText email = (EditText) findViewById(R.id.txtEmail);
+        btnLogin = (Button) findViewById(R.id.btnLogin);
+        txtPassword = (EditText) findViewById(R.id.txtPassword);
+        txtEmail = (EditText) findViewById(R.id.txtEmail);
 
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
-            email.setText(extras.getString("email"));
-            password.setText(extras.getString("password"));
-            btnLogin_onClick(btnLogin);
+            txtEmail.setText(extras.getString("email"));
+            txtPassword.setText(extras.getString("password"));
+            try {
+                btnLogin_onClick(btnLogin);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    public void btnLogin_onClick(View button) {
+    public void btnLogin_onClick(View button) throws JSONException {
+
+        String user = txtEmail.getText().toString();
+        String pass = txtPassword.getText().toString();
+
         //code manual login procedure here.
+        String loggedIn = login();
 
-        //don't forget to handle google logins too.
-
-        double userid = login();
-
-        if(userid > 0){
-            //switch to home page.
+        if (Objects.equals(loggedIn, "200")) {
             switchToHome();
+        } else {
+            //display some sort of error.
         }
+        //don't forget to handle google logins too.
     }
 
-    private double login(){
+    private String login() throws JSONException {
 
         boolean test = true;
-        if (test) return 1;
+        if (test) return "200";
 
-        EditText password = findViewById(R.id.txtPassword);
-        EditText email = findViewById(R.id.txtNewEmail);
+        EditText txtPassword = findViewById(R.id.txtPassword);
+        EditText txtEmail = findViewById(R.id.txtNewEmail);
+        String user = txtEmail.getText().toString();
+        String pass = txtPassword.getText().toString();
 
-        String url = "jdbc:mysql://localhost:3306/mydatabase"; // URL of the database
-        String dbUser = "myuser"; // Username for the database
-        String dbPass = "mypassword"; // Password for the database
+        DefaultApi api = new DefaultApi();
 
-        double userid = 1;
-
+        JSONObject loginResponse = api.loginAuthTokenPost(user,pass);
+        String status;
         try {
-            // Load the JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
-
-            // Create a connection to the database
-            Connection conn = DriverManager.getConnection(url, dbUser, dbPass);
-
-//            // Create a statement
-            Statement stmt = conn.createStatement();
-//
-//            // Execute a query
-            ResultSet rs = stmt.executeQuery("SELECT * FROM mytable");
-//
-//            // Iterate over the result set and print the values
-//            while (rs.next()) {
-//                String column1 = rs.getString("column1");
-//                int column2 = rs.getInt("column2");
-//                System.out.println("column1: " + column1 + ", column2: " + column2);
-//            }
-
-            // Close the connection
-            conn.close();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            status = loginResponse.get("code").toString();
+        } catch (JSONException e) {
+            status = loginResponse.toString();
         }
 
-
-
-        return userid;
+        return status;
     }
 
     private Intent signupIntent = null;

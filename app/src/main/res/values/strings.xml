@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Artify AI</string>
+    <string name="txtPleaseWait">Please wait.</string>
 </resources>

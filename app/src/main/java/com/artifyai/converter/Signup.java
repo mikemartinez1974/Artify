@@ -16,6 +16,14 @@ import java.util.regex.Pattern;
 
 import java.sql.*;
 
+//import io.swagger.client.*;
+//import io.swagger.client.auth.*;
+//import io.swagger.client.model.*;
+//import io.swagger.client.api.DefaultApi;
+
+import java.io.File;
+import java.util.*;
+
 public class Signup extends AppCompatActivity {
 
     private boolean formIsValid() {
@@ -117,37 +125,26 @@ public class Signup extends AppCompatActivity {
         EditText birthdate = findViewById(R.id.txtBirthdate);
         EditText email = findViewById(R.id.txtNewEmail);
 
-        String url = "jdbc:mysql://localhost:3306/mydatabase"; // URL of the database
-        String dbUser = "myuser"; // Username for the database
-        String dbPass = "mypassword"; // Password for the database
+        String ema = email.getText().toString().trim();
+        String p = password.getText().toString().trim();
 
+        DefaultApi api = new DefaultApi();
+        UserCreate newUser = new UserCreate(ema).setPassword(p);
         try {
-            // Load the JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
+            Object result = api.registerAuthRegisterPost(newUser);
 
-            // Create a connection to the database
-            Connection conn = DriverManager.getConnection(url, dbUser, dbPass);
+            System.out("create user result:")
+            System.out.println(result);
 
-//            // Create a statement
-//            Statement stmt = conn.createStatement();
-//
-//            // Execute a query
-//            ResultSet rs = stmt.executeQuery("SELECT * FROM mytable");
-//
-//            // Iterate over the result set and print the values
-//            while (rs.next()) {
-//                String column1 = rs.getString("column1");
-//                int column2 = rs.getInt("column2");
-//                System.out.println("column1: " + column1 + ", column2: " + column2);
-//            }
+            return true;
+            return result.status == 200 ? true : false;
 
-            // Close the connection
-            conn.close();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+        } catch (ApiException e) {
+            System.err.println("Exception when calling DefaultApi#registerAuthRegisterPost");
+            e.printStackTrace();
         }
 
-        return true;
+
     }
 
     private void switchToLogin() {

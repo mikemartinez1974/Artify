@@ -21,29 +21,29 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/some_id"
-        android:layout_width="256dp"
-        android:layout_height="60dp"
+        android:id="@+id/txtTimer"
+        android:layout_width="259dp"
+        android:layout_height="87dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:gravity="top"
-        android:text="text"
-        android:textAppearance="@styles/some_id"
+        android:text="00:15:00"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="60sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/group_10000" />
 
     <TextView
-        android:id="@+id/please_wait"
+        android:id="@+id/txtPleaseWait"
         android:layout_width="298dp"
         android:layout_height="20dp"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="66dp"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="578dp"
-        android:text="@string/please_wait"
-        android:textAppearance="@style/please_wait"
         android:gravity="top"
-        />
+        android:text="@string/txtPleaseWait"
+        android:textColor="@color/design_default_color_primary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

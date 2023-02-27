@@ -26,6 +26,9 @@ package com.artifyai.converter;
     import android.widget.ImageView;
     import android.widget.LinearLayout;
 
+    import org.json.JSONException;
+    import org.json.JSONObject;
+
     import java.io.ByteArrayOutputStream;
     import java.io.File;
     import java.io.FileNotFoundException;
@@ -129,124 +132,154 @@ public class Home extends AppCompatActivity {
         // Pass selected files ( selected_files[] ) to upload service.
         // Or pass to the next activity.
 
+        boolean uploadComplete = upload_files(selected_files);
+
+
 
     }
 
+    private boolean upload_files(File[] selected_files) {
+        boolean retval;
+        DefaultApi api = new DefaultApi();
 
-        @Override
-        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
+        JSONObject result = api.uploadimage(selected_files);
+        String result_code;
+        try {
+            result_code = result.get("code").toString();
+        } catch (JSONException e) {
+            result_code = "0";
+        }
 
-            if (resultCode == RESULT_OK) {
-                if (requestCode == REQUEST_IMAGE_PICK || requestCode == REQUEST_IMAGE_CAPTURE) {
-                    try {
-                        InputStream inputStream = getContentResolver().openInputStream(data.getData());
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                        ivSelfie.setImageBitmap(bitmap);
-                        addImageToScrollView(bitmap);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                else {
-                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+        if (result_code == "200") {
+            //Go to wait screen.
+        }
+        else {
+            alert("File upload was unsuccessful.");
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_PICK || requestCode == REQUEST_IMAGE_CAPTURE) {
+                try {
+                    InputStream inputStream = getContentResolver().openInputStream(data.getData());
+                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                     ivSelfie.setImageBitmap(bitmap);
                     addImageToScrollView(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
-        }
-
-        private void addImageToScrollView(Bitmap bitmap) {
-            Drawable selfie = ivSelfie.getDrawable();
-            ImageView imageView = new ImageView(this);
-            imageView.setImageDrawable(selfie);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(300, 300);
-            params.setMargins(10, 10, 10, 10);
-            imageView.setLayoutParams(params);
-            llThumbnails.addView(imageView);
-        }
-
-        public ArrayList<String> getSelectedFiles() {
-            return selected_files;
-        }
-
-        private void fileSelected(Uri uri) {
-            String filepath = uri.getPath();
-            Drawable thumbnailicon;
-
-
-            try {
-                InputStream is = getContentResolver().openInputStream(uri);
-                thumbnailicon = Drawable.createFromStream(is, uri.toString());
-            } catch (FileNotFoundException e) {
-                alert("file not found fetching fetching image.");
-            }
-
-            //ivSelfie.setBackground(thumbnailicon);
-            ivSelfie.setImageURI(uri);
-
-            ImageView ivNewThumbnail = new ImageView(this);
-            ivNewThumbnail.setImageURI(uri);
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(125,150);
-            lp.setMargins(5,10,5,10);
-
-            ivNewThumbnail.setLayoutParams(lp);
-
-            llThumbnails.addView(ivNewThumbnail);
-            //llThumbnails.addView(ivNewThumbnail);
-            //hsv.arrowScroll(2);
-        }
-
-        private File createImageFile() throws IOException {
-            // Create an image file name
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String imageFileName = "JPEG_" + timeStamp + "_";
-            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            File image = File.createTempFile(
-                    imageFileName,  /* prefix */
-                    ".jpg",         /* suffix */
-                    storageDir      /* directory */
-            );
-
-            // Save a file: path for use with ACTION_VIEW intents
-            return image;
-        }
-
-        public Uri createUri() {
-            File imageFile = new File(getApplicationContext().getFilesDir(),"selfie.jpg");
-            return FileProvider.getUriForFile( getApplicationContext(), "com.artifyai.converter.fileProvider",imageFile);
-        }
-
-        private void requestCameraPermission() {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                // Show explanation why the app needs the camera permission
-                new AlertDialog.Builder(this)
-                        .setTitle("Camera permission")
-                        .setMessage("This app needs access to your camera to take pictures.")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // Request the permission
-                                ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
-                            }
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .create()
-                        .show();
-            } else {
-                // Request the permission
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+            else {
+                Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                ivSelfie.setImageBitmap(bitmap);
+                addImageToScrollView(bitmap);
             }
         }
+    }
 
-        private void alert(String message) {
+    private void addImageToScrollView(Bitmap bitmap) {
+        Drawable selfie = ivSelfie.getDrawable();
+        ImageView imageView = new ImageView(this);
+        imageView.setImageDrawable(selfie);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(300, 300);
+        params.setMargins(10, 10, 10, 10);
+        imageView.setLayoutParams(params);
+        llThumbnails.addView(imageView);
+    }
+
+    public ArrayList<String> getSelectedFiles() {
+        return selected_files;
+    }
+
+    private void fileSelected(Uri uri) {
+        String filepath = uri.getPath();
+        Drawable thumbnailicon;
+
+
+        try {
+            InputStream is = getContentResolver().openInputStream(uri);
+            thumbnailicon = Drawable.createFromStream(is, uri.toString());
+        } catch (FileNotFoundException e) {
+            alert("file not found fetching fetching image.");
+        }
+
+        //ivSelfie.setBackground(thumbnailicon);
+        ivSelfie.setImageURI(uri);
+
+        ImageView ivNewThumbnail = new ImageView(this);
+        ivNewThumbnail.setImageURI(uri);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(125,150);
+        lp.setMargins(5,10,5,10);
+
+        ivNewThumbnail.setLayoutParams(lp);
+
+        llThumbnails.addView(ivNewThumbnail);
+        //llThumbnails.addView(ivNewThumbnail);
+        //hsv.arrowScroll(2);
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        return image;
+    }
+
+    public Uri createUri() {
+        File imageFile = new File(getApplicationContext().getFilesDir(),"selfie.jpg");
+        return FileProvider.getUriForFile( getApplicationContext(), "com.artifyai.converter.fileProvider",imageFile);
+    }
+
+    private void requestCameraPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            // Show explanation why the app needs the camera permission
             new AlertDialog.Builder(this)
-                    .setTitle("Alert")
-                    .setMessage(message)
-                    .setPositiveButton("OK", null)
+                    .setTitle("Camera permission")
+                    .setMessage("This app needs access to your camera to take pictures.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Request the permission
+                            ActivityCompat.requestPermissions(Home.this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+                        }
+                    })
                     .setNegativeButton("Cancel", null)
                     .create()
                     .show();
+        } else {
+            // Request the permission
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
         }
     }
+
+    private Intent trainingIntent = null;
+    private void switchToTraining(){
+        if(trainingIntent == null) {
+            trainingIntent = new Intent(this, GeneratingImages.class);
+        }
+
+        startActivity(trainingIntent);
+    }
+    private void alert(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Alert")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+}
