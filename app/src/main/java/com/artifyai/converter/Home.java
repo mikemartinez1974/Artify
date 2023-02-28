@@ -40,6 +40,11 @@ package com.artifyai.converter;
     import java.util.Date;
     import java.util.UUID;
 
+    import io.swagger.client.*;
+    import io.swagger.client.auth.*;
+    import io.swagger.client.model.*;
+    import io.swagger.client.api.DefaultApi;
+
 
 public class Home extends AppCompatActivity {
 
