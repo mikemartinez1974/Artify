@@ -1,12 +1,15 @@
 package com.artifyai.converter;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONObject;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -14,20 +17,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import java.sql.*;
+import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.DefaultApi;
 
-//import io.swagger.client.*;
-//import io.swagger.client.auth.*;
-//import io.swagger.client.model.*;
-//import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
 
 public class Signup extends AppCompatActivity {
 
     private boolean formIsValid() {
-
 
         EditText email = findViewById(R.id.txtNewEmail);
         String ema = email.getText().toString().trim();
@@ -109,18 +107,21 @@ public class Signup extends AppCompatActivity {
     public void btnSignup_onClick(View button) {
         //account creation code here.
 
-        Button btnSignup = (Button) findViewById(R.id.btnSignup);
+        Button btnSignup = findViewById(R.id.btnSignup);
 
         if(formIsValid()){
             boolean accountCreated = createAccount();
             if(accountCreated) {
                 switchToLogin();
             }
+            else {
+                alert("Account creation failed.");
+            }
         }
     }
 
     private boolean createAccount(){
-        Button btnSignup = (Button) findViewById(R.id.btnSignup);
+        Button btnSignup = findViewById(R.id.btnSignup);
         EditText password = findViewById(R.id.txtPassword);
         EditText birthdate = findViewById(R.id.txtBirthdate);
         EditText email = findViewById(R.id.txtNewEmail);
@@ -129,22 +130,21 @@ public class Signup extends AppCompatActivity {
         String p = password.getText().toString().trim();
 
         DefaultApi api = new DefaultApi();
-        UserCreate newUser = new UserCreate(ema).setPassword(p);
+        UserCreate newUser = new UserCreate();
+        newUser.setEmail(ema);
+        newUser.setPassword(p);
+
+        boolean bResult = false;
         try {
             Object result = api.registerAuthRegisterPost(newUser);
-
-            System.out("create user result:")
-            System.out.println(result);
-
-            return true;
-            return result.status == 200 ? true : false;
-
-        } catch (ApiException e) {
+            bResult = ((JSONObject) result).getInt("status") == 200;
+        } catch (Exception e) {
+            alert(e.toString());
             System.err.println("Exception when calling DefaultApi#registerAuthRegisterPost");
             e.printStackTrace();
         }
 
-
+        return bResult;
     }
 
     private void switchToLogin() {
@@ -166,5 +166,15 @@ public class Signup extends AppCompatActivity {
         }
 
         startActivity(loginIntent);
+    }
+
+    private void alert(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Alert")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
     }
 }

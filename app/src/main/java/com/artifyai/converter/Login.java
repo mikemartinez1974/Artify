@@ -1,26 +1,22 @@
 package com.artifyai.converter;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Objects;
 
 import io.swagger.client.*;
+import io.swagger.client.api.DefaultApi;
 import io.swagger.client.auth.*;
 import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
 
 public class Login extends AppCompatActivity {
 
@@ -37,9 +33,9 @@ public class Login extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        btnLogin = (Button) findViewById(R.id.btnLogin);
-        txtPassword = (EditText) findViewById(R.id.txtPassword);
-        txtEmail = (EditText) findViewById(R.id.txtEmail);
+        btnLogin = findViewById(R.id.btnLogin);
+        txtPassword = findViewById(R.id.txtPassword);
+        txtEmail = findViewById(R.id.txtEmail);
 
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
@@ -47,17 +43,13 @@ public class Login extends AppCompatActivity {
             txtPassword.setText(extras.getString("password"));
             try {
                 btnLogin_onClick(btnLogin);
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    public void btnLogin_onClick(View button) throws JSONException {
-
-        String user = txtEmail.getText().toString();
-        String pass = txtPassword.getText().toString();
-
+    public void btnLogin_onClick(View button) throws JSONException, ApiException {
         //code manual login procedure here.
         String loggedIn = login();
 
@@ -69,9 +61,10 @@ public class Login extends AppCompatActivity {
         //don't forget to handle google logins too.
     }
 
-    private String login() throws JSONException {
+    private String login() throws JSONException, ApiException {
 
-        boolean test = true;
+        boolean test = false;
+
         if (test) return "200";
 
         EditText txtPassword = findViewById(R.id.txtPassword);
@@ -81,12 +74,21 @@ public class Login extends AppCompatActivity {
 
         DefaultApi api = new DefaultApi();
 
-        JSONObject loginResponse = api.loginAuthTokenPost(user,pass);
+        Object loginResponse;
+        try {
+            loginResponse = api.loginAuthTokenPost("", user, pass,"","","" );
+        } catch (ApiException e) {
+
+            throw e;
+        }
+
+
         String status;
         try {
-            status = loginResponse.get("code").toString();
+            status = ((JSONObject)loginResponse).get("code").toString();
         } catch (JSONException e) {
             status = loginResponse.toString();
+            throw(e);
         }
 
         return status;

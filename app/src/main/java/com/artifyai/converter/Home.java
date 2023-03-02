@@ -1,49 +1,42 @@
 package com.artifyai.converter;
 
-    import androidx.annotation.Nullable;
-    import androidx.appcompat.app.AlertDialog;
-    import androidx.appcompat.app.AppCompatActivity;
-    import androidx.core.app.ActivityCompat;
-    import androidx.core.content.ContextCompat;
-    import androidx.core.content.FileProvider;
+import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.view.View;
+import android.widget.Button;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
-    import android.Manifest;
-    import android.content.DialogInterface;
-    import android.content.Intent;
-    import android.content.pm.PackageManager;
-    import android.graphics.Bitmap;
-    import android.graphics.BitmapFactory;
-    import android.graphics.drawable.BitmapDrawable;
-    import android.graphics.drawable.Drawable;
-    import android.net.Uri;
-    import android.os.Bundle;
-    import android.os.Environment;
-    import android.provider.MediaStore;
-    import android.view.View;
-    import android.view.ViewGroup;
-    import android.widget.Button;
-    import android.widget.HorizontalScrollView;
-    import android.widget.ImageView;
-    import android.widget.LinearLayout;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-    import org.json.JSONException;
-    import org.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-    import java.io.ByteArrayOutputStream;
-    import java.io.File;
-    import java.io.FileNotFoundException;
-    import java.io.FileOutputStream;
-    import java.io.IOException;
-    import java.io.InputStream;
-    import java.text.SimpleDateFormat;
-    import java.util.ArrayList;
-    import java.util.Date;
-    import java.util.UUID;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.UUID;
 
-    import io.swagger.client.*;
-    import io.swagger.client.auth.*;
-    import io.swagger.client.model.*;
-    import io.swagger.client.api.DefaultApi;
+import io.swagger.client.*;
+import io.swagger.client.api.DefaultApi;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
 
 
 public class Home extends AppCompatActivity {
@@ -60,23 +53,20 @@ public class Home extends AppCompatActivity {
         private LinearLayout llThumbnails;
         private ArrayList<String> selected_files = new ArrayList<>();
 
-        Uri imageUri;
-
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_home);
 
-            ivSelfie = (ImageView)findViewById(R.id.ivSelfie);
-            btnSelect = (Button)findViewById(R.id.btnSelect);
-            btnSelfie = (Button)findViewById(R.id.btnSelfie);
-            btnUpload = (Button)findViewById(R.id.btnUpload);
-            hsvSelectedImages = (HorizontalScrollView) findViewById(R.id.hsvThumbnails);
-            llThumbnails = (LinearLayout)findViewById(R.id.llThumbnails);
+            ivSelfie = findViewById(R.id.ivSelfie);
+            btnSelect = findViewById(R.id.btnSelect);
+            btnSelfie = findViewById(R.id.btnSelfie);
+            btnUpload = findViewById(R.id.btnUpload);
+            hsvSelectedImages = findViewById(R.id.hsvThumbnails);
+            llThumbnails = findViewById(R.id.llThumbnails);
             llThumbnails.removeAllViewsInLayout();
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(125,150);
-            ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) lp;
-            mlp.setMargins(5,10,5,10);
+            lp.setMargins(5,10,5,10);
         }
 
         public void btnSelect_onClick(View button) {
@@ -97,7 +87,7 @@ public class Home extends AppCompatActivity {
             startActivityForResult(intent, CAMERA_PERMISSION_REQUEST_CODE);
         }
 
-    public void btnUpload_onClick(View button) {
+    public void btnUpload_onClick(View button) throws JSONException, ApiException {
 
         // Create the array to hold the selected files
         File[] selected_files = new File[llThumbnails.getChildCount()];
@@ -137,30 +127,41 @@ public class Home extends AppCompatActivity {
         // Pass selected files ( selected_files[] ) to upload service.
         // Or pass to the next activity.
 
-        boolean uploadComplete = upload_files(selected_files);
-
-
-
+        try{
+            upload_files(selected_files);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
-    private boolean upload_files(File[] selected_files) {
-        boolean retval;
+    private boolean upload_files(File[] selected_files) throws ApiException, JSONException {
         DefaultApi api = new DefaultApi();
 
-        JSONObject result = api.uploadimage(selected_files);
-        String result_code;
+        Object result;
         try {
-            result_code = result.get("code").toString();
-        } catch (JSONException e) {
-            result_code = "0";
+            result = api.uploadImageUploadimagePost(Arrays.asList(selected_files));
+        } catch (ApiException e) {
+            int x = 0;
+            throw e;
         }
 
-        if (result_code == "200") {
+        String result_code;
+        try {
+            result_code = ((JSONObject)result).get("code").toString();
+        } catch (JSONException e) {
+            result_code = "0";
+            throw e;
+        }
+
+        if (result_code.equals("200")) {
             //Go to wait screen.
+            return true;
         }
         else {
             alert("File upload was unsuccessful.");
+            return false;
         }
+
     }
 
     @Override
@@ -200,54 +201,6 @@ public class Home extends AppCompatActivity {
         return selected_files;
     }
 
-    private void fileSelected(Uri uri) {
-        String filepath = uri.getPath();
-        Drawable thumbnailicon;
-
-
-        try {
-            InputStream is = getContentResolver().openInputStream(uri);
-            thumbnailicon = Drawable.createFromStream(is, uri.toString());
-        } catch (FileNotFoundException e) {
-            alert("file not found fetching fetching image.");
-        }
-
-        //ivSelfie.setBackground(thumbnailicon);
-        ivSelfie.setImageURI(uri);
-
-        ImageView ivNewThumbnail = new ImageView(this);
-        ivNewThumbnail.setImageURI(uri);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(125,150);
-        lp.setMargins(5,10,5,10);
-
-        ivNewThumbnail.setLayoutParams(lp);
-
-        llThumbnails.addView(ivNewThumbnail);
-        //llThumbnails.addView(ivNewThumbnail);
-        //hsv.arrowScroll(2);
-    }
-
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        return image;
-    }
-
-    public Uri createUri() {
-        File imageFile = new File(getApplicationContext().getFilesDir(),"selfie.jpg");
-        return FileProvider.getUriForFile( getApplicationContext(), "com.artifyai.converter.fileProvider",imageFile);
-    }
-
     private void requestCameraPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
             // Show explanation why the app needs the camera permission
@@ -271,13 +224,18 @@ public class Home extends AppCompatActivity {
     }
 
     private Intent trainingIntent = null;
-    private void switchToTraining(){
+
+
+        private void switchToTraining(){
         if(trainingIntent == null) {
             trainingIntent = new Intent(this, GeneratingImages.class);
         }
 
         startActivity(trainingIntent);
     }
+
+
+
     private void alert(String message) {
         new AlertDialog.Builder(this)
                 .setTitle("Alert")

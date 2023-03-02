@@ -1,16 +1,11 @@
 package com.artifyai.converter;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class Results extends AppCompatActivity {
 

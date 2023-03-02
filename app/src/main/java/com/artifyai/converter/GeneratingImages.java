@@ -1,20 +1,15 @@
 package com.artifyai.converter;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.service.autofill.TextValueSanitizer;
 import android.widget.TextView;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import org.w3c.dom.Text;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class GeneratingImages extends AppCompatActivity {
 
-    TextView txtTimer = (TextView) findViewById(R.id.txtTimer);
+    TextView txtTimer = findViewById(R.id.txtTimer);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
